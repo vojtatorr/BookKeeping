@@ -8,101 +8,92 @@ $instanceBooks = new Books($dbConnection);
 $books = $instanceBooks->getBooks();
 // $selBookss = $books;
 
-if (isset($_GET['lastName']) || isset($_GET['firstName']) || isset($_GET['bookName']) || isset($_GET['isbn'])) {
-    $sellastName = $_GET['lastName'];
-    $selfirstName = $_GET['firstName'];
-    $selbookName = $_GET['bookName'];
-    $selisbn = $_GET['isbn'];
-
-    $selBooks = $instanceBooks->filterBooks($sellastName, $selfirstName, $selbookName, $selisbn);
+if (isset($_GET['keyword']) && !empty($_GET['keyword'])) {
+    $keyword = $_GET['keyword'];
+    $selBooks = $instanceBooks->searchBooks($keyword);
 } else {
-    $selBooks = $books;
-}
-
-// Zpracování mazání knih
-if (isset($_GET['delete'])) {
-    $bookId = $_GET['delete'];
-    $instanceBooks->deleteBook($bookId);
-    header("Location: index.php");
-    exit();
+    $selBooks = $instanceBooks->getBooks();
 }
 
 ?>
 
 
 <!-- HTML -->
-</html>
+<html>
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <title>Evidence knih</title>
+    <!-- Head -->
+    <?php include 'head.php'; ?>
 </head>
 
 
 <body>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Evidence knih</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="index.php">Přehled knih</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="edit.php">Editace knihy</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="add.php">Vkládání nových knich</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+
+    <!-- Navbar -->
+    <?php include 'navbar.php'; ?>
+
     <div class="container">
-        <h2 class="h2">Vyhledávání</h2>
-        <form action="index.php" method="get">
-            <input class="form-control my-2" name="firstName" type="text" placeholder="Zadejte jméno autora" />
-            <input class="form-control my-2" name="lastName" type="text" placeholder="Zadejte příjmení autora" />
-            <input class="form-control my-2" name="bookName" type="text" placeholder="Zadejte název knihy" />
-            <input class="form-control my-2" name="isbn" type="text" placeholder="Zadejte ISBN" />
-            <input class="btn btn-primary my-2" type="submit" placeholder="Odešli" />
-        </form>
+
+        <div class="container m-2">
+            <h2 class="h2">Vyhledávání</h2>
+            <form action="index.php" method="get">
+                <input class="form-control my-2" name="keyword" type="text" placeholder="Zadejte klíčové slovo" />
+                <input class="btn btn-primary my-2" type="submit" value="Hledat" />
+            </form>
+        </div>
+
         <?php
         if (sizeof($selBooks) > 0) {
 
-        ?>
-            <table class="table">
-                <tr>
-                    <th>Jméno</th>
-                    <th>Přijmení</th>
-                    <th>Název</th>
-                    <th>ISBN</th>
-                    <th>Popis</th>
-
-                    
-                </tr>
-                <?php foreach ($selBooks as $book): ?>
-                    <tr>
-                        <td><?php echo $book['firstName']; ?></td>
-                        <td><?php echo $book['lastName']; ?></td>
-                        <td><?php echo $book['bookName']; ?></td>
-                        <td><?php echo $book['isbn']; ?></td>
-                        <td><?php echo $book['popis']; ?></td>
-                        <td>
-                            <a class="btn btn-warning" href="edit.php?id=<?php echo $book['id']; ?>">Editovat</a>
-                            <a class="btn btn-warning" href="index.php?delete=<?php echo $book['id']; ?>" onclick="return confirm('Opravdu chcete vymazat tuto knihu?');">Smazat</a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
+        
+            foreach ($selBooks as $index => $book): ?>
+                <!-- bookbox -->
+                <div class="container bookbox">
+                    <div class="row">
+                        <div class="col-11">
+                            <div class="row">
+                                <div class="col-12 align-items-center bookname">
+                                    <?php echo $book['bookName']; ?>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col-6 align-items-center author">
+                                    <?php echo $book['author']; ?>
+                                </div>
+                                <div class="col-5 align-items-center isbn">
+                                    <?php echo $book['isbn']; ?>
+                                </div>
+                                <div class="col-1 align-items-center">
+                                    <button 
+                                        class="btn btn-primary btn-sm" 
+                                        type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse-<?php echo $index; ?>" 
+                                        aria-expanded="false" 
+                                        aria-controls="collapse-<?php echo $index; ?>">
+                                        Popis
+                                    </button>
+                                </div>
+                            </div>
+            
+                            <!-- Collapse container -->
+                            <div class="collapse m-1 collapse-vertical" id="collapse-<?php echo $index; ?>">
+                                <div class="card card-body" style="width: auto;">
+                                    <?php echo $book['popis']; ?>
+                                </div>
+                            </div>
+                        </div>
+            
+                        <div class="col-1">
+                            <a href="edit.php?id=<?php echo $book['id']; ?>" class="d-flex justify-content-center align-items-center btn btn-warning w-100 h-100">
+                                <img src="img/settings-cog.png" alt="settings-cog" width="auto" height="auto">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
 
         <?php
         } else { ?>
@@ -112,7 +103,6 @@ if (isset($_GET['delete'])) {
         ?>
 
     </div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
